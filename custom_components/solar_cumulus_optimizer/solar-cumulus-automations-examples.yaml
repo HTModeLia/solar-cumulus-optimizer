@@ -1,0 +1,234 @@
+# Exemples d'automations pour utiliser Solar Cumulus Optimizer
+# À adapter à votre configuration
+
+automation:
+  # ============= NOTIFICATIONS =============
+  - id: cumulus_solar_activation
+    alias: "Cumulus - Notification activation solaire"
+    description: "Notifie quand le cumulus se lance via solaire"
+    trigger:
+      - platform: state
+        entity_id: switch.cumulus_control
+        to: "on"
+        attribute: reason
+        id: solar_activation
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.attributes.reason == 'solar' }}"
+    action:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "☀️ Cumulus Solaire Activé"
+          message: >
+            Production solaire: {{ state_attr('switch.cumulus_control', 'solar_power_w') | round(0) }}W
+            Injection: {{ states('sensor.linky_sinti') | round(0) }}W
+
+  - id: cumulus_hc_activation
+    alias: "Cumulus - Notification activation HC"
+    description: "Notifie quand le cumulus se lance en tarif HC"
+    trigger:
+      - platform: state
+        entity_id: switch.cumulus_control
+        to: "on"
+    condition:
+      - condition: template
+        value_template: "{{ 'hc' in state_attr('switch.cumulus_control', 'reason') }}"
+    action:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "🌙 Cumulus HC Activé"
+          message: >
+            Raison: {{ state_attr('switch.cumulus_control', 'reason') }}
+            Température: {{ states('sensor.outside_temperature') | round(1) }}°C
+
+  - id: cumulus_deactivation
+    alias: "Cumulus - Notification désactivation"
+    description: "Notifie quand le cumulus s'arrête"
+    trigger:
+      - platform: state
+        entity_id: switch.cumulus_control
+        to: "off"
+    action:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "⏹️ Cumulus Arrêté"
+          message: >
+            Durée: {{ ((states('sensor.cumulus_last_duration') | int(0)) // 60) }}min
+            Mode: {{ state_attr('switch.cumulus_control', 'reason') }}
+
+  # ============= ALERTES =============
+  - id: cumulus_excessive_hc
+    alias: "Cumulus - Alerte HC excessive"
+    description: "Alerte si trop d'activations HC"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.cumulus_daily_hc_activations
+        above: 5
+    action:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "⚠️ Cumulus - HC Excessif"
+          message: >
+            {{ states('sensor.cumulus_daily_hc_activations') }} activations HC aujourd'hui.
+            Vérifier la météo ou augmenter les seuils.
+
+  - id: cumulus_low_solar
+    alias: "Cumulus - Faible production solaire"
+    description: "Notifie si production solaire faible toute la journée"
+    trigger:
+      - platform: time
+        at: "18:00:00"
+    condition:
+      - condition: template
+        value_template: >
+          {{ (states('sensor.cumulus_daily_solar_runtime') | int(0)) < 1800 }}
+    action:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "☁️ Faible Production Solaire"
+          message: >
+            Temps solaire : 
+            {{ ((states('sensor.cumulus_daily_solar_runtime') | int(0)) // 60) }}min
+            Vérifier panneaux ou météo.
+
+  # ============= AUTOMATIONS INTELLIGENTES =============
+  - id: cumulus_weather_preemptive
+    alias: "Cumulus - Chauffage préventif mauvais temps"
+    description: "Lance HC avant mauvais temps prévu"
+    trigger:
+      - platform: state
+        entity_id: weather.home
+        to:
+          - rainy
+          - pouring
+          - snowy
+    condition:
+      - condition: state
+        entity_id: switch.cumulus_control
+        state: "off"
+      - condition: time
+        after: "14:00:00"
+        before: "20:00:00"
+    action:
+      - service: switch.turn_on
+        entity_id: switch.cumulus_control
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "🌧️ Chauffage Préemptif"
+          message: "Mauvais temps prévu, cumulus lancé en HC"
+
+  - id: cumulus_reset_daily_stats
+    alias: "Cumulus - Reset stats quotidiennes"
+    description: "Réinitialise les stats à minuit"
+    trigger:
+      - platform: time
+        at: "00:00:00"
+    action:
+      - service: homeassistant.reload_custom_components
+        # Ou implémenter un service de reset dans le composant
+
+  # ============= LOGS ET MONITORING =============
+  - id: cumulus_runtime_milestone
+    alias: "Cumulus - Alerte durée runtime"
+    description: "Alerte si runtime dépasse le max"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.cumulus_daily_solar_runtime
+        above: 10800  # 3h
+    condition:
+      - condition: state
+        entity_id: switch.cumulus_control
+        state: "on"
+    action:
+      - service: system_log.write
+        data:
+          level: warning
+          logger: solar_cumulus_optimizer
+          message: >
+            Runtime dépassé: 
+            {{ ((states('sensor.cumulus_daily_solar_runtime') | int(0)) // 60) }}min
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "⏱️ Runtime Maximum Atteint"
+          message: >
+            Cumulus actif depuis 
+            {{ ((states('sensor.cumulus_daily_solar_runtime') | int(0)) // 60) }}min
+
+  # ============= INTÉGRATIONS EXTERNES =============
+  - id: cumulus_influxdb_logging
+    alias: "Cumulus - Log InfluxDB"
+    description: "Enregistre les activations dans InfluxDB"
+    trigger:
+      - platform: state
+        entity_id: switch.cumulus_control
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('switch.cumulus_control', 'reason') != 'idle' }}"
+    action:
+      - service: influxdb.write
+        data:
+          measurement: cumulus_activation
+          tags:
+            reason: "{{ state_attr('switch.cumulus_control', 'reason') }}"
+            device: cumulus_solar
+          fields:
+            power: "{{ state_attr('switch.cumulus_control', 'solar_power_w') | float(0) }}"
+            active: "{{ is_state('switch.cumulus_control', 'on') | int }}"
+
+  - id: cumulus_cost_tracking
+    alias: "Cumulus - Suivi des coûts"
+    description: "Calcule les coûts d'exploitation"
+    trigger:
+      - platform: time
+        at: "23:59:00"
+    action:
+      - service: system_log.write
+        data:
+          level: info
+          logger: solar_cumulus_optimizer
+          message: >
+            Coûts journaliers:
+            Solaire: gratuit ({{ ((states('sensor.cumulus_daily_solar_runtime') | int(0)) // 60) }}min)
+            HC: ~{{ ((states('sensor.cumulus_daily_hc_runtime') | int(0)) / 3600 * 2000 * 0.15 / 1000) | round(2) }}€
+
+# Scripts utiles
+script:
+  cumulus_force_on:
+    alias: "Forcer activation cumulus"
+    description: "Active le cumulus manuellement"
+    sequence:
+      - service: switch.turn_on
+        entity_id: switch.cumulus_control
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "Cumulus"
+          message: "Activation manuelle"
+
+  cumulus_force_off:
+    alias: "Forcer arrêt cumulus"
+    description: "Arrête le cumulus manuellement"
+    sequence:
+      - service: switch.turn_off
+        entity_id: switch.cumulus_control
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "Cumulus"
+          message: "Arrêt manuel"
+
+  cumulus_show_stats:
+    alias: "Afficher statistiques"
+    description: "Affiche les stats du jour"
+    sequence:
+      - service: notify.mobile_app_votre_telephone
+        data:
+          title: "📊 Cumulus - Statistiques du jour"
+          message: |
+            ☀️ Solaire:
+            - Activations: {{ states('sensor.cumulus_daily_solar_activations') }}
+            - Temps: {{ ((states('sensor.cumulus_daily_solar_runtime') | int(0)) // 60) }}min
+
+            🌙 HC:
+            - Activations: {{ states('sensor.cumulus_daily_hc_activations') }}
+            - Temps: {{ ((states('sensor.cumulus_daily_hc_runtime') | int(0)) // 60) }}min
+
+            ☀️ Production actuelle: {{ states('sensor.cumulus_solar_power') }}W

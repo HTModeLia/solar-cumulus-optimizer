@@ -1,0 +1,11 @@
+{
+  "domain": "solar-cumulus-optimizer",
+  "name": "Optimiseur de Cumulus Solaire",
+  "codeowners": ["@HTModeLia"],
+  "dependencies": [],
+  "documentation": "https://github.com/HTModeLia/solar-cumulus-optimizer",
+  "integration_type": "helper",
+  "iot_class": "local_polling",
+  "version": "1.0.0",
+  "requirements": []
+}

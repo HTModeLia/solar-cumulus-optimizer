@@ -45,7 +45,7 @@ Composant Home Assistant pour optimiser la recharge de votre cumulus (ballon d'e
 
 ```bash
 # Dans home-assistant/custom_components/
-git clone https://github.com/votre-user/solar-cumulus-optimizer solar_cumulus_optimizer
+git clone https://github.com/HTModeLia/solar-cumulus-optimizer solar_cumulus_optimizer
 ```
 
 Redémarrer Home Assistant.

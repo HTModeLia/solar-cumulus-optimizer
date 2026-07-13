@@ -1,0 +1,2 @@
+# Solar Cumulus Optimizer - No external dependencies
+# Uses only Home Assistant core and Python standard library

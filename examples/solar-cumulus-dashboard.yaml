@@ -1,0 +1,307 @@
+title: Optimisation Cumulus Solaire
+views:
+  - theme: Backend-selected
+    title: Principal
+    badges: []
+    cards:
+      # Carte de statut principal
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: 🌞 Cumulus Solaire - Tableau de Bord
+
+          - type: custom:mushroom-entity-card
+            entity: switch.cumulus_control
+            name: État du Cumulus
+            icon: mdi:water-boiler
+            layout: vertical
+            tap_action:
+              action: toggle
+            show_entity_picture: false
+            features:
+              - type: target-temperature
+                step_size: 1
+
+      # Statut actuel
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.cumulus_status
+            primary: "{{ state }}"
+            secondary: "Raison d'activation"
+            icon: |
+              {% if is_state('switch.cumulus_control', 'on') %}
+                {% if 'solar' in states('sensor.cumulus_status') %}
+                  mdi:solar-power
+                {% elif 'hc' in states('sensor.cumulus_status') %}
+                  mdi:moon-waning
+                {% else %}
+                  mdi:play
+                {% endif %}
+              {% else %}
+                mdi:pause
+              {% endif %}
+
+          - type: custom:mushroom-template-card
+            entity: sensor.cumulus_solar_power
+            primary: "{{ state | int }}W"
+            secondary: "Puissance Solaire"
+            icon: mdi:solar-power-box
+
+          - type: custom:mushroom-template-card
+            entity: sensor.cumulus_cloud_detection
+            primary: "{{ state }}"
+            secondary: "État Ciel"
+            icon: |
+              {% if is_state('sensor.cumulus_cloud_detection', 'nuage') %}
+                mdi:cloud
+              {% else %}
+                mdi:sun
+              {% endif %}
+
+      # Graphique puissance solaire
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.cumulus_solar_power
+        hours_to_show: 24
+        line_color: '#FFB81C'
+        name: Puissance Solaire (24h)
+        font_size: 90
+        show:
+          name: true
+          icon: true
+          extrema: true
+          average: true
+
+      # Statistiques du jour
+      - type: grid
+        columns: 2
+        cards:
+          - type: custom:mushroom-number-card
+            entity: sensor.cumulus_daily_solar_activations
+            icon: mdi:counter
+            name: "Activations Solaire (J)"
+            tap_action:
+              action: none
+
+          - type: custom:mushroom-number-card
+            entity: sensor.cumulus_daily_hc_activations
+            icon: mdi:counter
+            name: "Activations HC (J)"
+            tap_action:
+              action: none
+
+          - type: custom:template-entity-row
+            name: "Temps Solaire (J)"
+            state: >
+              {% set seconds = states('sensor.cumulus_daily_solar_runtime') | int(0) %}
+              {% set hours = (seconds // 3600) %}
+              {% set minutes = ((seconds % 3600) // 60) %}
+              {{ hours }}h {{ minutes }}m
+
+          - type: custom:template-entity-row
+            name: "Temps HC (J)"
+            state: >
+              {% set seconds = states('sensor.cumulus_daily_hc_runtime') | int(0) %}
+              {% set hours = (seconds // 3600) %}
+              {% set minutes = ((seconds % 3600) // 60) %}
+              {{ hours }}h {{ minutes }}m
+
+      # Détails de la dernière activation
+      - type: entities
+        title: "Dernière Activation"
+        entities:
+          - entity: sensor.cumulus_last_duration
+            name: "Durée"
+            format: duration
+          - entity: switch.cumulus_control
+            attribute: last_activation
+            name: "Heure de début"
+          - entity: switch.cumulus_control
+            attribute: min_runtime_end
+            name: "Fin du temps minimum"
+          - entity: switch.cumulus_control
+            attribute: reason
+            name: "Raison d'activation"
+
+  - theme: Backend-selected
+    title: Graphiques
+    badges: []
+    cards:
+      - type: custom:mushroom-title-card
+        title: 📊 Graphiques Détaillés
+
+      # Graphique puissance 24h avec zone
+      - type: custom:apexcharts-card
+        header:
+          title: Puissance Solaire 24h
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.cumulus_solar_power
+            name: Puissance Solaire
+            type: area
+            color: '#FFB81C'
+            stroke_width: 2
+            opacity: 0.3
+        chart_type: line
+        span:
+          start: day
+        apex_config:
+          chart:
+            toolbar:
+              tools:
+                download: true
+                selection: true
+                zoom: true
+                zoomin: true
+                zoomout: true
+                pan: true
+                reset: true
+
+      # Statistiques temps
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.cumulus_daily_solar_runtime
+            min: 0
+            max: 14400
+            name: "Temps Solaire (4h max)"
+            needle: true
+            segments:
+              - from: 0
+                color: '#FF0000'
+              - from: 7200
+                color: '#FF7F00'
+              - from: 10800
+                color: '#FFFF00'
+              - from: 14400
+                color: '#00FF00'
+
+          - type: gauge
+            entity: sensor.cumulus_daily_hc_runtime
+            min: 0
+            max: 14400
+            name: "Temps HC (4h max)"
+            needle: true
+            segments:
+              - from: 0
+                color: '#FF0000'
+              - from: 7200
+                color: '#FF7F00'
+              - from: 10800
+                color: '#FFFF00'
+              - from: 14400
+                color: '#0000FF'
+
+      # Historique activations
+      - type: entities
+        title: "Statistiques Actuelles"
+        entities:
+          - type: divider
+            label: "Solaire"
+          - entity: sensor.cumulus_daily_solar_activations
+            name: "Nombre d'activations"
+          - entity: sensor.cumulus_daily_solar_runtime
+            name: "Temps cumulé"
+            format: duration
+          - type: divider
+            label: "Heures Creuses"
+          - entity: sensor.cumulus_daily_hc_activations
+            name: "Nombre d'activations"
+          - entity: sensor.cumulus_daily_hc_runtime
+            name: "Temps cumulé"
+            format: duration
+
+  - theme: Backend-selected
+    title: Contrôle
+    badges: []
+    cards:
+      - type: custom:mushroom-title-card
+        title: 🎛️ Contrôle Avancé
+
+      # Contrôle principal
+      - type: custom:mushroom-template-card
+        entity: switch.cumulus_control
+        primary: >
+          {% if is_state('switch.cumulus_control', 'on') %}
+            CUMULUS EN MARCHE
+          {% else %}
+            CUMULUS ARRÊTÉ
+          {% endif %}
+        secondary: >
+          {{
+            states.switch.cumulus_control.attributes.solar_power_w | round(1)
+          }}W | {{ states.switch.cumulus_control.attributes.reason }}
+        icon: |
+          {% if is_state('switch.cumulus_control', 'on') %}
+            mdi:water-boiler
+          {% else %}
+            mdi:water-boiler-off
+          {% endif %}
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+        layout: vertical
+        multiline_secondary: true
+
+      # Boutons de contrôle
+      - type: horizontal-stack
+        cards:
+          - type: button
+            entity: switch.cumulus_control
+            name: "Activer"
+            action_name: "ACTIVER"
+            tap_action:
+              action: call-service
+              service: switch.turn_on
+              data:
+                entity_id: switch.cumulus_control
+
+          - type: button
+            entity: switch.cumulus_control
+            name: "Désactiver"
+            action_name: "DÉSACTIVER"
+            tap_action:
+              action: call-service
+              service: switch.turn_off
+              data:
+                entity_id: switch.cumulus_control
+
+      # Informations détaillées
+      - type: custom:fold-entity-row
+        head:
+          entity: switch.cumulus_control
+          name: "Informations Détaillées"
+          icon: mdi:information
+        entities:
+          - entity: sensor.cumulus_status
+            name: "Statut"
+          - entity: sensor.cumulus_solar_power
+            name: "Puissance Solaire"
+          - entity: sensor.cumulus_cloud_detection
+            name: "Nuages"
+          - entity: sensor.cumulus_last_duration
+            name: "Dernière durée"
+          - type: divider
+          - entity: switch.cumulus_control
+            attribute: active
+            name: "Actif"
+          - entity: switch.cumulus_control
+            attribute: cloud_detected
+            name: "Nuage Détecté"
+          - entity: switch.cumulus_control
+            attribute: min_runtime_end
+            name: "Fin Runtime Min"
+
+      # Journal des actions (si history-stats disponible)
+      - type: history-graph
+        title: "Historique Activations (24h)"
+        entities:
+          - switch.cumulus_control
+        hours_to_show: 24
+        refresh_interval: 30
+
+# Configuration pour desktop
+mode: storage

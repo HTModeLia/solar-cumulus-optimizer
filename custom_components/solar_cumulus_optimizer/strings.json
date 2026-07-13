@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration Solar Cumulus Optimizer",
+        "description": "Configurez l'optimisation de votre cumulus solaire",
+        "data": {
+          "name": "Nom de la configuration",
+          "solar_power_entity": "Entité de puissance solaire (Watts)",
+          "cumulus_relay_entity": "Entité du relais cumulus",
+          "weather_entity": "Entité météo (pour prévisions)",
+          "linky_ntraf_entity": "Linky NTRAF (1=HP, 2+=HC)",
+          "linky_sinti_entity": "Linky SINTI (injection)"
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Options d'optimisation",
+          "data": {
+            "min_solar_power": "Puissance solaire minimale (W)",
+            "min_runtime": "Durée minimale de fonctionnement (min)",
+            "max_runtime": "Durée maximale de fonctionnement (min)",
+            "cloud_threshold": "Seuil de détection de nuages (%)",
+            "hysteresis": "Hystérésis (W)",
+            "night_temp_threshold": "Seuil température nuit (°C)",
+            "temp_outside_entity": "Entité température extérieure (optionnel)"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "cumulus_control": {
+        "name": "Cumulus - Contrôle"
+      }
+    },
+    "sensor": {
+      "cumulus_status": {
+        "name": "Cumulus - Statut"
+      },
+      "solar_power": {
+        "name": "Cumulus - Puissance Solaire"
+      },
+      "cloud_detection": {
+        "name": "Cumulus - Détection Nuages"
+      },
+      "daily_solar_activations": {
+        "name": "Cumulus - Activations Solaire (Jour)"
+      },
+      "daily_solar_runtime": {
+        "name": "Cumulus - Temps Solaire (Jour)"
+      },
+      "daily_hc_activations": {
+        "name": "Cumulus - Activations HC (Jour)"
+      },
+      "daily_hc_runtime": {
+        "name": "Cumulus - Temps HC (Jour)"
+      },
+      "last_activation_duration": {
+        "name": "Cumulus - Dernière Durée"
+      }
+    }
+  }
+}

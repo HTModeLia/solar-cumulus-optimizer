@@ -1,23 +1,209 @@
-# Urban Solar Virtual Battery Pro
+# Solar Cumulus Optimizer
 
-Suivez votre batterie virtuelle Urban Solar comme un pro sur Home Assistant.
-Intégration personnalisée pour Home Assistant permettant de suivre le niveau et les économies d'une batterie virtuelle Urban Solar avec un matériel Enphase + ZLinky.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1.0-blue?style=for-the-badge)](https://www.home-assistant.io/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge)](https://www.python.org/)
+[![GitHub](https://img.shields.io/badge/GitHub-votre--username-blue?style=for-the-badge)](https://github.com/votre-username/solar-cumulus-optimizer)
 
-## Entités générées :
-1. **Niveau Batterie Virtuelle (kWh)** : Votre solde en temps réel.
-2. **Coût Taxes Déstockage (€)** : Ce que vous coûte l'utilisation de votre batterie (TURPE).
-3. **Économies Réalisées (€)** : L'argent que vous n'avez pas donné à votre fournisseur d'énergie grâce au stockage.
+Composant Home Assistant pour optimiser la recharge de votre cumulus (ballon d'eau chaude) en fonction de la production solaire, des tarifs Linky et des prévisions météorologiques.
+
+## Caractéristiques
+
+🌞 **Optimisation Solaire**
+- Activation automatique en cas de surproduction solaire
+- Détection de nuages transitoires
+- Historique de puissance sur 10 minutes
+
+⚡ **Gestion des tarifs Linky**
+- Utilise les tarifs HC/HP via `ntraf`
+- Chauffage automatique en HC la nuit si nécessaire
+- Considère l'injection d'énergie (`sinti`)
+
+🌡️ **Intelligence Météo**
+- Intégration avec votre intégration météo
+- Chauffage préventif si mauvais temps prévu
+- Seuil de température extérieure configurable
+
+🔄 **Modes de Fonctionnement**
+- **Solar**: Activation lors de surproduction
+- **HC Night**: Activation en tarif HC de nuit
+- **Min Runtime**: Garantit 2h minimum de fonctionnement continu
+- **Manual**: Contrôle manuel via switch
 
 ## Installation
-1. Copiez `custom_components/urban_solar_bv` dans votre dossier `config/custom_components`.
-2. Redémarrer Home Assistant.
-3. Allez dans **Paramètres > Appareils et Services > Ajouter une intégration**.
-4. Cherchez **Urban Solar Virtual Battery**.
 
-## Dashboard conseillé
-Utilisez la carte `History Graph` pour le niveau (kWh) et `Gauge` pour les économies réalisées.
+### Via HACS (Recommandé)
 
-## Intégration au Dashboard Énergie
-1. Dans la section **Consommation**, ajoutez vos capteurs ZLinky.
-2. Pour le prix, choisissez **"Utiliser une entité de prix"** et sélectionnez `sensor.prix_kwh_actuel_dynamique`.
-3. Dans **Stockage sur batterie**, ajoutez `sensor.niveau_batterie_virtuelle`.
+1. Ouvrir HACS dans Home Assistant
+2. Aller à "Intégrations"
+3. Cliquer sur "Créer une intégration personnalisée"
+4. Chercher "Solar Cumulus Optimizer"
+5. Installer et redémarrer Home Assistant
+
+### Installation Manuelle
+
+```bash
+# Dans home-assistant/custom_components/
+git clone https://github.com/votre-user/solar-cumulus-optimizer solar_cumulus_optimizer
+```
+
+Redémarrer Home Assistant.
+
+## Configuration
+
+1. **Aller à Paramètres > Appareils et Services > Créer une intégration**
+2. **Chercher "Solar Cumulus Optimizer"**
+3. **Compléter les entités requises:**
+   - Entité de puissance solaire (W) - ex: `sensor.solar_power_now`
+   - Entité du relais cumulus - ex: `switch.cumulus_relay`
+   - Entité météo - ex: `weather.home`
+   - Linky NTRAF - ex: `sensor.linky_ntraf`
+   - Linky SINTI - ex: `sensor.linky_sinti`
+
+4. **Configurer les options** (après création):
+   - Puissance solaire minimale: 500W (défaut)
+   - Durée minimale: 120 min (2h)
+   - Durée maximale: 180 min (3h)
+   - Seuil nuages: 30%
+   - Seuil température nuit: 5°C
+
+## Utilisation
+
+### Entités disponibles
+
+**Switch:**
+- `switch.cumulus_control_*` - Contrôle manuel du cumulus
+
+**Sensors:**
+- `sensor.cumulus_status_*` - Statut actuel (solar, hc_night, idle)
+- `sensor.cumulus_solar_power_*` - Puissance solaire actuellement vue
+- `sensor.cumulus_cloud_detection_*` - Détection de nuages
+- `sensor.cumulus_daily_solar_activations_*` - Nombre d'activations solaire du jour
+- `sensor.cumulus_daily_solar_runtime_*` - Temps solaire cumulé (secondes)
+- `sensor.cumulus_daily_hc_activations_*` - Nombre d'activations HC du jour
+- `sensor.cumulus_daily_hc_runtime_*` - Temps HC cumulé (secondes)
+- `sensor.cumulus_last_duration_*` - Durée de la dernière activation
+
+### Automations Exemples
+
+**Notification quand cumulus démarre:**
+```yaml
+automation:
+  - alias: "Cumulus activation notification"
+    trigger:
+      entity_id: switch.cumulus_control
+      to: "on"
+    action:
+      service: notify.mobile_app_votre_telephone
+      data:
+        message: >
+          Cumulus activé ({{ state_attr('switch.cumulus_control', 'reason') }})
+          Puissance solaire: {{ state_attr('switch.cumulus_control', 'solar_power_w') }}W
+```
+
+**Alerte si cumulus en HC trop souvent:**
+```yaml
+automation:
+  - alias: "HC usage alert"
+    trigger:
+      entity_id: sensor.cumulus_daily_hc_activations
+      to: "5"
+    action:
+      service: notify.mobile_app_votre_telephone
+      data:
+        message: "Cumulus: 5+ activations HC aujourd'hui - vérifier configuration"
+```
+
+## Logique d'Optimisation
+
+### Priorités
+
+1. **Vérifie si runtime min pas expirée** → Continue si < 2h
+2. **Mode Solaire**: 
+   - Si production > seuil (500W défaut)
+   - ET injection > 100W
+3. **Mode HC Nuit**:
+   - Entre coucher/lever du soleil
+   - ET tarif HC actif (ntraf >= 2)
+   - ET (température extérieure < 5°C OU mauvais temps prévu)
+4. **Sinon**: Mode idle
+
+### Détection de Nuages
+
+- Calcule moyenne des 5 dernières lectures
+- Détecte chute de puissance > seuil (30% défaut)
+- Bascule en HC de nuit si nuage détecté
+
+## Diagnostique
+
+### Logs
+
+```yaml
+logger:
+  logs:
+    custom_components.solar_cumulus_optimizer: debug
+```
+
+### Attributs du switch
+
+```
+reason: solar|hc_night|idle|min_runtime|manual
+active: true/false
+solar_power_w: 1234.5
+cloud_detected: true/false
+min_runtime_end: 2024-01-15T14:32:45
+last_activation: 2024-01-15T14:00:00
+```
+
+## Dépannage
+
+**Cumulus ne s'active jamais**
+- Vérifier que l'entité du relais existe
+- Vérifier que puissance solaire dépasse le seuil
+- Vérifier les logs en debug
+
+**Trop d'activations HC**
+- Augmenter le seuil de température
+- Vérifier intégration météo
+- Vérifier données Linky
+
+**Arrêt avant 2h**
+- Vérifier que `min_runtime` est bien configuré
+- Vérifier que puissance solaire baisse vraiment
+
+## Architecture
+
+```
+solar_cumulus_optimizer/
+├── __init__.py              # Point d'entrée
+├── config_flow.py           # Configuration UI
+├── coordinator.py           # Logique d'optimisation
+├── switch.py               # Platform switch
+├── sensor.py               # Platform sensor
+├── strings.json            # Traductions
+└── manifest.json           # Métadonnées
+```
+
+## Contribuer
+
+Les PRs sont bienvenues! Pour les changements majeurs:
+1. Fork le repo
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit (`git commit -m 'Add AmazingFeature'`)
+4. Push (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## Licence
+
+MIT License - voir LICENSE pour détails
+
+## Support
+
+Pour des questions/issues:
+- Ouvrir une issue sur GitHub
+- Chercher des réponses dans les discussions existantes
+
+## Crédits
+
+Créé pour optimiser l'autoconsommation solaire avec Home Assistant.

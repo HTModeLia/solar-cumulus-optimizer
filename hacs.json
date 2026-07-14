@@ -3,13 +3,13 @@
   "hacs": "1.33.0",
   "domains": ["switch", "sensor", "binary_sensor"],
   "homeassistant": "2024.1.0",
-  "documentation": "https://github.com/votre-username/solar-cumulus-optimizer",
-  "issues": "https://github.com/votre-username/solar-cumulus-optimizer/issues",
+  "documentation": "https://github.com/HTModeLia/solar-cumulus-optimizer",
+  "issues": "https://github.com/HTModeLia/solar-cumulus-optimizer/issues",
   "requirements": [],
   "render_readme": true,
   "iot_class": "local_polling",
   "version": "1.0.0",
-  "codeowners": ["@votre-username"],
-  "country": ["FR"],
+  "codeowners": "@HTModeLia",
+  "country": "FR",
   "topics": ["solar", "cumulus", "optimization", "linky", "autoconsumption", "home-assistant", "energy"]
 }

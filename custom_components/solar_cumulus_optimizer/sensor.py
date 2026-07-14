@@ -1,38 +1,46 @@
 """Platform sensor pour Solar Cumulus Optimizer."""
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+import logging
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Setup du platform sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities(
-        [
-            CumulusStatusSensor(coordinator, entry),
-            SolarPowerSensor(coordinator, entry),
-            CloudDetectionSensor(coordinator, entry),
-            DailySolarActivationsSensor(coordinator, entry),
-            DailySolarRuntimeSensor(coordinator, entry),
-            DailyHCActivationsSensor(coordinator, entry),
-            DailyHCRuntimeSensor(coordinator, entry),
-            LastActivationDurationSensor(coordinator, entry),
+    """Configuration de la plateforme sensor."""
+    try:
+        coordinator = hass.data[DOMAIN][config_entry.entry_id]
+        
+        entities = [
+            CumulusStatusSensor(coordinator, config_entry),
+            SolarPowerSensor(coordinator, config_entry),
+            CloudDetectionSensor(coordinator, config_entry),
+            DailySolarActivationsSensor(coordinator, config_entry),
+            DailySolarRuntimeSensor(coordinator, config_entry),
+            DailyHCActivationsSensor(coordinator, config_entry),
+            DailyHCRuntimeSensor(coordinator, config_entry),
+            LastActivationDurationSensor(coordinator, config_entry),
         ]
-    )
+        
+        async_add_entities(entities)
+        _LOGGER.debug(f"Added {len(entities)} sensor entities")
+        
+    except Exception as err:
+        _LOGGER.error(f"Erreur setup sensor: {err}")
+        raise
 
 
 class CumulusStatusSensor(SensorEntity):
-    """Capteur de statut du cumulus."""
+    """Sensor pour le statut du cumulus."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
@@ -40,38 +48,38 @@ class CumulusStatusSensor(SensorEntity):
         self.entry = entry
         self._attr_unique_id = f"{DOMAIN}_status_{entry.entry_id}"
         self._attr_name = "Cumulus - Statut"
-        self._attr_icon = "mdi:water-boiler"
+        self._attr_icon = "mdi:information"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> str:
         """Retourne le statut."""
-        state = self.coordinator.state
-        if not state.relay_active:
-            return "idle"
-        return state.relay_reason
+        try:
+            state = self.coordinator.data
+            if state.relay_active:
+                return state.relay_reason.upper()
+            return "IDLE"
+        except Exception:
+            return "UNKNOWN"
 
     @property
-    def extra_state_attributes(self) -> dict:
-        """Attributs supplémentaires."""
-        state = self.coordinator.state
-        return {
-            "active": state.relay_active,
-            "reason": state.relay_reason,
-            "solar_power_w": round(state.solar_power, 1),
-            "cloud_detected": state.cloud_detected,
-            "min_runtime_end": state.min_runtime_end,
-            "last_activation": state.last_activation,
-        }
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class SolarPowerSensor(SensorEntity):
-    """Capteur de puissance solaire."""
+    """Sensor pour la puissance solaire."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
@@ -79,24 +87,36 @@ class SolarPowerSensor(SensorEntity):
         self.entry = entry
         self._attr_unique_id = f"{DOMAIN}_solar_power_{entry.entry_id}"
         self._attr_name = "Cumulus - Puissance Solaire"
-        self._attr_native_unit_of_measurement = UnitOfPower.WATT
-        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_icon = "mdi:solar-power"
+        self._attr_unit_of_measurement = "W"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> float:
-        """Retourne la puissance solaire."""
-        return round(self.coordinator.state.solar_power, 1)
+        """Retourne la puissance."""
+        try:
+            return self.coordinator.data.solar_power
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class CloudDetectionSensor(SensorEntity):
-    """Capteur de détection de nuages."""
+    """Sensor pour la détection de nuages."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
@@ -105,44 +125,70 @@ class CloudDetectionSensor(SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_cloud_detection_{entry.entry_id}"
         self._attr_name = "Cumulus - Détection Nuages"
         self._attr_icon = "mdi:cloud"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> str:
-        """Retourne l'état de détection."""
-        return "nuage" if self.coordinator.state.cloud_detected else "clair"
+        """Retourne état."""
+        try:
+            return "NUAGEUX" if self.coordinator.data.cloud_detected else "CLAIR"
+        except Exception:
+            return "UNKNOWN"
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class DailySolarActivationsSensor(SensorEntity):
-    """Nombre d'activations solaires aujourd'hui."""
+    """Sensor pour compteur activations solaires."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
         self.coordinator = coordinator
         self.entry = entry
-        self._attr_unique_id = f"{DOMAIN}_daily_solar_acts_{entry.entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_daily_solar_activations_{entry.entry_id}"
         self._attr_name = "Cumulus - Activations Solaire (Jour)"
         self._attr_icon = "mdi:counter"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> int:
-        """Retourne le nombre d'activations."""
-        return self.coordinator.state.daily_stats["solar_activations"]
+        """Retourne le nombre."""
+        try:
+            return self.coordinator.data.daily_stats.get("solar_activations", 0)
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class DailySolarRuntimeSensor(SensorEntity):
-    """Durée d'activation solaire aujourd'hui."""
+    """Sensor pour temps solaire."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
@@ -150,47 +196,73 @@ class DailySolarRuntimeSensor(SensorEntity):
         self.entry = entry
         self._attr_unique_id = f"{DOMAIN}_daily_solar_runtime_{entry.entry_id}"
         self._attr_name = "Cumulus - Temps Solaire (Jour)"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._attr_icon = "mdi:timer"
+        self._attr_icon = "mdi:clock"
+        self._attr_unit_of_measurement = "h"
+        self._attr_has_entity_name = True
 
     @property
-    def native_value(self) -> int:
-        """Retourne le temps total."""
-        return int(self.coordinator.state.daily_stats["solar_runtime"])
+    def native_value(self) -> float:
+        """Retourne le temps en heures."""
+        try:
+            seconds = self.coordinator.data.daily_stats.get("solar_runtime", 0)
+            return round(seconds / 3600, 2)
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class DailyHCActivationsSensor(SensorEntity):
-    """Nombre d'activations HC aujourd'hui."""
+    """Sensor pour compteur HC."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
         self.coordinator = coordinator
         self.entry = entry
-        self._attr_unique_id = f"{DOMAIN}_daily_hc_acts_{entry.entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_daily_hc_activations_{entry.entry_id}"
         self._attr_name = "Cumulus - Activations HC (Jour)"
         self._attr_icon = "mdi:counter"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> int:
-        """Retourne le nombre d'activations."""
-        return self.coordinator.state.daily_stats["hc_activations"]
+        """Retourne le nombre."""
+        try:
+            return self.coordinator.data.daily_stats.get("hc_activations", 0)
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class DailyHCRuntimeSensor(SensorEntity):
-    """Durée d'activation HC aujourd'hui."""
+    """Sensor pour temps HC."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
@@ -198,41 +270,67 @@ class DailyHCRuntimeSensor(SensorEntity):
         self.entry = entry
         self._attr_unique_id = f"{DOMAIN}_daily_hc_runtime_{entry.entry_id}"
         self._attr_name = "Cumulus - Temps HC (Jour)"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._attr_icon = "mdi:timer"
+        self._attr_icon = "mdi:clock"
+        self._attr_unit_of_measurement = "h"
+        self._attr_has_entity_name = True
 
     @property
-    def native_value(self) -> int:
-        """Retourne le temps total."""
-        return int(self.coordinator.state.daily_stats["hc_runtime"])
+    def native_value(self) -> float:
+        """Retourne le temps en heures."""
+        try:
+            seconds = self.coordinator.data.daily_stats.get("hc_runtime", 0)
+            return round(seconds / 3600, 2)
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()
 
 
 class LastActivationDurationSensor(SensorEntity):
-    """Durée de la dernière activation."""
+    """Sensor pour dernière durée."""
 
     def __init__(self, coordinator, entry: ConfigEntry):
         """Initialisation."""
         self.coordinator = coordinator
         self.entry = entry
-        self._attr_unique_id = f"{DOMAIN}_last_duration_{entry.entry_id}"
+        self._attr_unique_id = f"{DOMAIN}_last_activation_duration_{entry.entry_id}"
         self._attr_name = "Cumulus - Dernière Durée"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
-        self._attr_icon = "mdi:timer-outline"
+        self._attr_icon = "mdi:clock"
+        self._attr_unit_of_measurement = "s"
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> int:
-        """Retourne la durée."""
-        return self.coordinator.state.activation_duration
+        """Retourne la durée en secondes."""
+        try:
+            return self.coordinator.data.activation_duration
+        except Exception:
+            return 0
+
+    @property
+    def available(self) -> bool:
+        """Disponibilité."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
-        """Ajoute les listeners."""
+        """Ajout à HA."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Mise à jour du coordinateur."""
+        self.async_write_ha_state()

@@ -73,12 +73,18 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> OptimizationState:
         """Récupère les données et décide de l'activation."""
         try:
-            # Récupère les données actuelles
+            # Récupère les données actuelles avec valeurs par défaut
             solar_power = self._get_entity_value(self.solar_power_entity, 0)
             is_night = self._is_night()
-            ntraf = self._get_entity_value(self.linky_ntraf_entity, 0)  # 1=HP, 2+=HC
+            ntraf = self._get_entity_value(self.linky_ntraf_entity, 1)  # 1=HP par défaut
             sinti = self._get_entity_value(self.linky_sinti_entity, 0)  # injection en W
-            outside_temp = self._get_entity_value(self.temp_outside_entity, 10)
+            outside_temp = self._get_entity_value(self.temp_outside_entity, 10)  # 10°C par défaut
+            
+            # Log en debug pour diagnostique
+            _LOGGER.debug(
+                f"Update: Power={solar_power}W, Night={is_night}, NTRAF={ntraf}, "
+                f"SINTI={sinti}W, Temp={outside_temp}°C"
+            )
 
             # Détecte les nuages
             self._detect_cloud_drop(solar_power)
@@ -150,6 +156,10 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
     def _is_bad_weather_expected(self) -> bool:
         """Vérifie si mauvais temps attendu dans les 6h."""
         try:
+            # Vérifier si l'entité météo est configurée
+            if not self.weather_entity:
+                return False
+            
             weather = self.hass.states.get(self.weather_entity)
             if weather is None:
                 return False
@@ -158,7 +168,8 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
             # Temps instable/nuageux/pluie
             bad_conditions = ["partlycloudy", "cloudy", "rainy", "snowy", "pouring"]
             return condition in bad_conditions
-        except Exception:
+        except Exception as err:
+            _LOGGER.debug(f"Erreur vérification météo: {err}")
             return False
 
     def _is_night(self) -> bool:
@@ -168,62 +179,75 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
     def _get_entity_value(self, entity_id: str, default: float = 0) -> float:
         """Récupère la valeur d'une entité."""
         try:
+            # Vérifier si l'entité est vide/optionnelle
+            if not entity_id:
+                return default
+            
             state = self.hass.states.get(entity_id)
             if state is None or state.state in ("unknown", "unavailable"):
                 return default
             return float(state.state)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError) as err:
+            _LOGGER.debug(f"Erreur lecture entité {entity_id}: {err}")
             return default
 
     async def _activate_relay(self, reason: str):
         """Active le relais."""
-        self.state.relay_active = True
-        self.state.relay_reason = reason
-        self.state.last_activation = datetime.now()
+        try:
+            self.state.relay_active = True
+            self.state.relay_reason = reason
+            self.state.last_activation = datetime.now()
 
-        # Défini la durée minimale
-        self.state.min_runtime_end = datetime.now() + timedelta(
-            minutes=self.min_runtime
-        )
+            # Défini la durée minimale
+            self.state.min_runtime_end = datetime.now() + timedelta(
+                minutes=self.min_runtime
+            )
 
-        await self.hass.services.async_call(
-            "switch",
-            "turn_on",
-            {"entity_id": self.cumulus_relay_entity},
-            blocking=True,
-        )
+            await self.hass.services.async_call(
+                "switch",
+                "turn_on",
+                {"entity_id": self.cumulus_relay_entity},
+                blocking=False,
+            )
 
-        # Stats
-        if reason == "solar":
-            self.state.daily_stats["solar_activations"] += 1
-        else:
-            self.state.daily_stats["hc_activations"] += 1
+            # Stats
+            if reason == "solar":
+                self.state.daily_stats["solar_activations"] += 1
+            else:
+                self.state.daily_stats["hc_activations"] += 1
 
-        _LOGGER.info(f"Relais activé: {reason}")
+            _LOGGER.info(f"Relais activé: {reason}")
+        except Exception as err:
+            _LOGGER.error(f"Erreur activation relais: {err}")
+            raise
 
     async def _deactivate_relay(self):
         """Désactive le relais."""
-        if self.state.last_activation:
-            duration = (datetime.now() - self.state.last_activation).total_seconds()
-            self.state.activation_duration = int(duration)
+        try:
+            if self.state.last_activation:
+                duration = (datetime.now() - self.state.last_activation).total_seconds()
+                self.state.activation_duration = int(duration)
 
-            # Stats
-            if self.state.relay_reason == "solar":
-                self.state.daily_stats["solar_runtime"] += duration
-            else:
-                self.state.daily_stats["hc_runtime"] += duration
+                # Stats
+                if self.state.relay_reason == "solar":
+                    self.state.daily_stats["solar_runtime"] += duration
+                else:
+                    self.state.daily_stats["hc_runtime"] += duration
 
-        self.state.relay_active = False
-        self.state.relay_reason = "idle"
+            self.state.relay_active = False
+            self.state.relay_reason = "idle"
 
-        await self.hass.services.async_call(
-            "switch",
-            "turn_off",
-            {"entity_id": self.cumulus_relay_entity},
-            blocking=True,
-        )
+            await self.hass.services.async_call(
+                "switch",
+                "turn_off",
+                {"entity_id": self.cumulus_relay_entity},
+                blocking=False,
+            )
 
-        _LOGGER.info(f"Relais désactivé après {self.state.activation_duration}s")
+            _LOGGER.info(f"Relais désactivé après {self.state.activation_duration}s")
+        except Exception as err:
+            _LOGGER.error(f"Erreur désactivation relais: {err}")
+            raise
 
     @callback
     def get_state(self) -> OptimizationState:

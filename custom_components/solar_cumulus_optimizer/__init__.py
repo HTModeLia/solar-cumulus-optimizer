@@ -14,7 +14,7 @@ from .coordinator import SolarCumulusCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "solar_cumulus_optimizer"
-PLATFORMS: Final = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: Final = [Platform.SWITCH, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 

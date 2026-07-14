@@ -32,6 +32,8 @@ class SolarCumulusControlSwitch(SwitchEntity):
         self.entry = entry
         self._attr_unique_id = f"{DOMAIN}_control_{entry.entry_id}"
         self._attr_name = "Cumulus Solaire - Contrôle"
+        self._attr_icon = "mdi:water-boiler"
+        self._attr_device_class = "switch"
 
     @property
     def is_on(self) -> bool:

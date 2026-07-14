@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.2] - 2026-07-13
+## [1.0.0] - 2024-01-15
 
 ### ✨ Fonctionnalités
 - ☀️ Optimisation automatique recharge cumulus sur production solaire
@@ -52,4 +52,4 @@
 ---
 
 Pour signaler des bugs ou proposer des features:
-https://github.com/HTModeLia/solar-cumulus-optimizer/issues
+https://github.com/votre-user/solar-cumulus-optimizer/issues

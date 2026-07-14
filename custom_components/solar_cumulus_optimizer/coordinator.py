@@ -8,7 +8,6 @@ from typing import Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers.sun import is_night
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,10 @@ class OptimizationState:
 
 class SolarCumulusCoordinator(DataUpdateCoordinator):
     """Coordinateur pour gérer l'optimisation du cumulus."""
+
+    def _is_night(self) -> bool:
+        """Retourne True s'il fait nuit (soleil sous l'horizon)."""
+        return self.hass.states.is_state("sun.sun", "below_horizon")
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialisation."""

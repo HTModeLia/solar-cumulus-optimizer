@@ -5,6 +5,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from . import DOMAIN
 
@@ -43,6 +44,17 @@ class SolarCumulusControlSwitch(SwitchEntity):
         self._attr_name = "Cumulus Solaire - Contrôle"
         self._attr_icon = "mdi:water-boiler"
         self._attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Retourne les informations du périphérique."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.entry.entry_id)},
+            name=self.entry.title or "Solar Cumulus Optimizer",
+            manufacturer="HTModeLia",
+            model="Solar Cumulus Optimizer",
+            sw_version="0.0.11",
+        )
 
     @property
     def should_poll(self) -> bool:

@@ -36,10 +36,6 @@ class OptimizationState:
 class SolarCumulusCoordinator(DataUpdateCoordinator):
     """Coordinateur pour gérer l'optimisation du cumulus."""
 
-    def _is_night(self) -> bool:
-        """Retourne True s'il fait nuit (soleil sous l'horizon)."""
-        return self.hass.states.is_state("sun.sun", "below_horizon")
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialisation."""
         super().__init__(
@@ -176,8 +172,8 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
             return False
 
     def _is_night(self) -> bool:
-        """Vérifie si c'est la nuit."""
-        return is_night(self.hass)
+        """Retourne True s'il fait nuit (soleil sous l'horizon)."""
+        return self.hass.states.is_state("sun.sun", "below_horizon")
 
     def _get_entity_value(self, entity_id: str, default: float = 0) -> float:
         """Récupère la valeur d'une entité."""

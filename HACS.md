@@ -12,7 +12,7 @@
    - Sélectionner "Paramètres personnalisés"
    - Remplir :
      ```
-     Repository URL: https://github.com/votre-username/solar-cumulus-optimizer
+     Repository URL: https://github.com/HTModeLia/solar-cumulus-optimizer
      Category: Integration
      Branch: main (ou master)
      ```

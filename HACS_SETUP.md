@@ -100,13 +100,13 @@ Il simplifie l'installation, la mise à jour et la gestion des extensions commun
   "hacs": "1.33.0",
   "domains": ["switch", "sensor", "binary_sensor"],
   "homeassistant": "2024.1.0",
-  "documentation": "https://github.com/votre-user/solar-cumulus-optimizer",
-  "issues": "https://github.com/votre-user/solar-cumulus-optimizer/issues",
+  "documentation": "https://github.com/HTModeLia/solar-cumulus-optimizer",
+  "issues": "https://github.com/HTModeLia/solar-cumulus-optimizer/issues",
   "requirements": [],
   "render_readme": true,
   "iot_class": "local_polling",
   "version": "1.0.0",
-  "codeowners": ["@votre-user"],
+  "codeowners": ["@HTModeLia"],
   "country": ["FR"],
   "topics": ["solar", "cumulus", "optimization", "linky", "autoconsumption"]
 }
@@ -128,7 +128,7 @@ Il simplifie l'installation, la mise à jour et la gestion des extensions commun
    Trois points (⋮) → Paramètres personnalisés
    → Ajouter un repository personnalisé
    
-   URL: https://github.com/votre-user/solar-cumulus-optimizer
+   URL: https://github.com/HTModeLia/solar-cumulus-optimizer
    Type: Integration
    Branche: main
    

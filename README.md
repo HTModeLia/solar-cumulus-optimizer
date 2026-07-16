@@ -4,7 +4,7 @@
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1.0-blue?style=for-the-badge)](https://www.home-assistant.io/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge)](https://www.python.org/)
-[![GitHub](https://img.shields.io/badge/GitHub-votre--username-blue?style=for-the-badge)](https://github.com/votre-username/solar-cumulus-optimizer)
+[![GitHub](https://img.shields.io/badge/GitHub-votre--username-blue?style=for-the-badge)](https://github.com/HTModeLia/solar-cumulus-optimizer)
 
 Composant Home Assistant pour optimiser la recharge de votre cumulus (ballon d'eau chaude) en fonction de la production solaire, des tarifs Linky et des prévisions météorologiques.
 

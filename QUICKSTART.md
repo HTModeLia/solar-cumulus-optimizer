@@ -7,7 +7,7 @@
 HACS → Intégrations
 Menu (⋮) → Paramètres personnalisés
 Ajouter:
-  URL: https://github.com/votre-user/solar-cumulus-optimizer
+  URL: https://github.com/HTModeLia/solar-cumulus-optimizer
   Type: Integration
   Branche: main
   
@@ -17,7 +17,7 @@ Chercher "Solar Cumulus Optimizer" → Installer → Redémarrer
 ### Méthode B : Manuel
 ```bash
 mkdir -p ~/.homeassistant/custom_components/
-git clone https://github.com/votre-user/solar-cumulus-optimizer \
+git clone https://github.com/HTModeLia/solar-cumulus-optimizer \
   ~/.homeassistant/custom_components/solar_cumulus_optimizer
 # Redémarrer Home Assistant
 ```

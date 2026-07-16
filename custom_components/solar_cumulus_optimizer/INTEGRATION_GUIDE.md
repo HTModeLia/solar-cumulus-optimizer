@@ -110,7 +110,7 @@ influxdb:
 
 2. Cloner et commencer :
 ```bash
-git clone https://github.com/votre-user/solar-cumulus-optimizer.git
+git clone https://github.com/HTModeLia/solar-cumulus-optimizer.git
 cd solar-cumulus-optimizer
 ```
 
@@ -173,7 +173,7 @@ mkdir -p /home/homeassistant/.homeassistant/custom_components/solar_cumulus_opti
    - Menu (≡) → Paramètres personnalisés (custom repositories)
    - Ajouter :
      ```
-     URL: https://github.com/votre-user/solar-cumulus-optimizer
+     URL: https://github.com/HTModeLia/solar-cumulus-optimizer
      Type: Integration
      Branche: main
      ```
@@ -431,6 +431,6 @@ git push origin feature/my-improvement
 **🎉 Bravo ! Votre optimisation solaire est prête !**
 
 Pour les questions :
-- Consulter la documentation : https://github.com/votre-user/solar-cumulus-optimizer/wiki
+- Consulter la documentation : https://github.com/HTModeLia/solar-cumulus-optimizer/wiki
 - Ouvrir une issue GitHub
 - Chercher dans les discussions existantes

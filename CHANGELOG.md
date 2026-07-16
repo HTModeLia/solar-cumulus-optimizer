@@ -52,4 +52,4 @@
 ---
 
 Pour signaler des bugs ou proposer des features:
-https://github.com/votre-user/solar-cumulus-optimizer/issues
+https://github.com/HTModeLia/solar-cumulus-optimizer/issues

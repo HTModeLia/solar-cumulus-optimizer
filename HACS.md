@@ -172,7 +172,7 @@ Le composant passe les critères HACS :
 {
   "domain": "solar_cumulus_optimizer",           // ID unique
   "name": "Solar Cumulus Optimizer",            // Nom affiché
-  "codeowners": ["@votre-username"],            // Mainteneurs GitHub
+  "codeowners": ["@HTModeLia"],            // Mainteneurs GitHub
   "config_flow": true,                          // Support config UI
   "documentation": "https://...",               // URL docs
   "issue_tracker": "https://...",               // URL issues
@@ -237,7 +237,7 @@ Notre composant respecte tous les guidelines ! ✅
 1. **Dans HACS → Intégrations**
    ```
    Solar Cumulus Optimizer
-   By: votre-username
+   By: HTModeLia
    Version: 1.0.0
    [Installer] [Plus d'infos] [Issues]
    ```

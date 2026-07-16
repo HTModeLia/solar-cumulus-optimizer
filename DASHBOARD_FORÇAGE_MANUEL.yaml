@@ -1,0 +1,358 @@
+# Dashboard Lovelace - Forçage Manuel Cumulus
+# Pour HTModeLia - HA 2026.7
+
+type: vertical-stack
+title: ☀️ Cumulus Solaire - Contrôle
+cards:
+  # ====== SECTION TITRE ======
+  - type: heading
+    heading: "🎮 Forçage Manuel du Cumulus"
+    heading_break: true
+
+  # ====== SECTION STATUT ACTUEL ======
+  - type: entities
+    title: "📊 État Actuel"
+    show_header_toggle: false
+    entities:
+      - entity: switch.cumulus_solaire_controle
+        name: "🔌 Relais Cumulus"
+      - entity: sensor.cumulus_statut
+        name: "📈 Statut"
+      - entity: sensor.cumulus_puissance_solaire
+        name: "☀️ Puissance Solaire"
+      - entity: sensor.cumulus_detection_nuages
+        name: "☁️ Nuages"
+
+  # ====== SECTION BOUTONS FORÇAGE - LIGNE 1 ======
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      # Bouton: Marche Constante
+      - type: button
+        name: "🔘 Marche Constante"
+        icon: mdi:power
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.force_manual_heating
+          data:
+            duration: "constant"
+            notify: true
+            auto_disable: true
+        hold_action:
+          action: none
+        style:
+          background: "#2ecc71"
+          color: "white"
+
+      # Bouton: Marche 2 Heures
+      - type: button
+        name: "⏱️ Marche 2h"
+        icon: mdi:timer-outline
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.force_manual_heating
+          data:
+            duration: "2h"
+            notify: true
+            auto_disable: true
+        style:
+          background: "#3498db"
+          color: "white"
+
+  # ====== SECTION BOUTONS FORÇAGE - LIGNE 2 ======
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      # Bouton: Marche 1 Heure
+      - type: button
+        name: "1️⃣ 1h"
+        icon: mdi:timer-sand
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.force_manual_heating
+          data:
+            duration: "1h"
+            notify: true
+            auto_disable: true
+        style:
+          background: "#9b59b6"
+          color: "white"
+
+      # Bouton: Marche 30 Minutes
+      - type: button
+        name: "3️⃣ 30m"
+        icon: mdi:timer-sand-empty
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.force_manual_heating
+          data:
+            duration: "30m"
+            notify: true
+            auto_disable: true
+        style:
+          background: "#f39c12"
+          color: "white"
+
+      # Bouton: Marche 15 Minutes
+      - type: button
+        name: "1️⃣5️⃣ 15m"
+        icon: mdi:timer-sand-empty
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.force_manual_heating
+          data:
+            duration: "15m"
+            notify: true
+            auto_disable: true
+        style:
+          background: "#e74c3c"
+          color: "white"
+
+  # ====== SECTION ARRÊT D'URGENCE ======
+  - type: button
+    name: "❌ ARRÊT IMMÉDIAT"
+    icon: mdi:power-off
+    show_state: false
+    tap_action:
+      action: call-service
+      service: solar_cumulus_optimizer.deactivate_heating
+      data:
+        notify: true
+    style:
+      background: "#c0392b"
+      color: "white"
+
+  # ====== SECTION INFORMATIONS ======
+  - type: markdown
+    content: |
+      ## 📋 Aide Rapide
+
+      ### Options de Forçage:
+
+      | Bouton | Effet | Durée |
+      |--------|-------|-------|
+      | 🔘 Constant | Marche continue | Indéfinie (arrêt manuel) |
+      | ⏱️ 2h | Marche 2 heures | Arrêt auto après 2h |
+      | 1️⃣ 1h | Marche 1 heure | Arrêt auto après 1h |
+      | 3️⃣ 30m | Marche 30 min | Arrêt auto après 30 min |
+      | 1️⃣5️⃣ 15m | Marche 15 min | Arrêt auto après 15 min |
+      | ❌ Arrêt | Arrêt immédiat | Immédiat |
+
+      ---
+
+      ### 💡 Conseils:
+
+      - **Peu d'eau chaude?** → Cliquez sur **🔘 Constant**
+      - **Bain avant d'arriver?** → Cliquez sur **⏱️ 2h** le matin
+      - **Chauffage rapide?** → Cliquez sur **3️⃣ 30m**
+      - **Arrêt d'urgence?** → Cliquez sur **❌ Arrêt**
+
+      ---
+
+      ### 🔔 Notifications:
+
+      Vous recevrez une notification:
+      - ✅ Quand le cumulus s'active
+      - ⏰ Quand le timer s'écoule (pour durées temporaires)
+      - ❌ Quand le cumulus s'arrête
+
+  # ====== SECTION GRAPHIQUES ======
+  - type: history-graph
+    title: "📈 Historique 24h"
+    entities:
+      - entity: sensor.cumulus_puissance_solaire
+        name: "Puissance Solaire (W)"
+    hours_to_show: 24
+    refresh_interval: 300
+
+  # ====== SECTION STATISTIQUES ======
+  - type: entities
+    title: "📊 Statistiques du Jour"
+    show_header_toggle: false
+    entities:
+      - entity: sensor.cumulus_activations_solaire_jour
+        name: "☀️ Activations Solaires"
+      - entity: sensor.cumulus_temps_solaire_jour
+        name: "☀️ Temps Solaire"
+      - entity: sensor.cumulus_activations_hc_jour
+        name: "🌙 Activations HC"
+      - entity: sensor.cumulus_temps_hc_jour
+        name: "🌙 Temps HC"
+      - entity: sensor.cumulus_derniere_duree
+        name: "⏱️ Dernière Durée"
+
+  # ====== SECTION ACTIONS AVANCÉES ======
+  - type: heading
+    heading: "⚙️ Actions Avancées"
+    heading_break: true
+
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      # Bouton: Reset Stats
+      - type: button
+        name: "🔄 Reset Stats"
+        icon: mdi:refresh
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.reset_stats
+          data: {}
+        style:
+          background: "#95a5a6"
+          color: "white"
+
+      # Bouton: Smart Mode
+      - type: button
+        name: "🧠 Smart Mode"
+        icon: mdi:brain
+        show_state: false
+        tap_action:
+          action: call-service
+          service: solar_cumulus_optimizer.smart_activate
+          data:
+            temperature: 60
+            enable_notifications: true
+            enable_lights: false
+        style:
+          background: "#16a085"
+          color: "white"
+
+  # ====== SECTION INFOS ======
+  - type: markdown
+    content: |
+      ---
+
+      ### ℹ️ Informations
+
+      - **Composant**: Solar Cumulus Optimizer
+      - **Version**: 1.0.2
+      - **Utilisateur**: HTModeLia
+      - **Home Assistant**: 2026.7+
+      - **Licence**: MIT
+
+      ---
+
+      ### 🆘 Dépannage
+
+      **Le cumulus ne s'allume pas?**
+      - Vérifier que le relais est configuré
+      - Vérifier les logs: Configuration → Outils → Logs
+      - Chercher: "solar_cumulus_optimizer"
+
+      **Les notifications ne s'affichent pas?**
+      - Vérifier que persistent_notification est actif
+      - Vérifier dans les paramètres Home Assistant
+
+      **Le timer n'arrête pas le cumulus?**
+      - Utiliser le bouton **❌ Arrêt** manuellement
+      - Vérifier les logs
+
+      ---
+
+      ### 📞 Support
+
+      Pour plus d'aide:
+      - Consulter FORCE_MANUAL_GUIDE.md
+      - Vérifier les logs Home Assistant
+      - Visiter le forum community.home-assistant.io
+
+---
+
+## 🎨 PERSONNALISATION
+
+### Ajouter des icônes mdi:
+```yaml
+icon: mdi:power        # Bouton power
+icon: mdi:timer        # Minuteur
+icon: mdi:timer-sand   # Sablier
+icon: mdi:power-off    # Power off
+icon: mdi:refresh      # Rafraîchir
+icon: mdi:brain        # Intelligent
+```
+
+### Changer les couleurs:
+```yaml
+style:
+  background: "#2ecc71"   # Vert
+  background: "#3498db"   # Bleu
+  background: "#e74c3c"   # Rouge
+  background: "#f39c12"   # Orange
+  background: "#9b59b6"   # Violet
+  color: "white"          # Blanc
+  color: "black"          # Noir
+```
+
+### Ajuster la taille des boutons:
+```yaml
+type: grid
+columns: 2              # 2 colonnes
+columns: 3              # 3 colonnes
+square: true            # Boutons carrés
+square: false           # Boutons rectangulaires
+```
+
+---
+
+## 📱 VERSION MOBILE
+
+Pour une meilleure affichage mobile, adapter les colonnes:
+
+```yaml
+- type: grid
+  columns: 1  # 1 seule colonne sur mobile
+  cards:
+    # ...
+```
+
+---
+
+## ✨ AMÉLIORATIONS POSSIBLES
+
+1. **Ajouter un timer visuel** qui compte les secondes
+2. **Ajouter un toggle switch** au lieu de boutons
+3. **Ajouter des automations** qui appelent le service
+4. **Ajouter des graphiques** ApexCharts
+5. **Ajouter des notifications** via Telegram/Email
+
+---
+
+## 🚀 INSTALLATION
+
+1. Aller à **Paramètres → Tableaux de Bord**
+2. **Créer un nouveau tableau** ou **Éditer existant**
+3. **Clic code** (mode texte)
+4. **Copier le code YAML ci-dessus**
+5. **Sauvegarder**
+6. **Rafraîchir** la page
+
+---
+
+## 🎯 RÉSUMÉ
+
+Vous avez maintenant un dashboard complet avec:
+
+✅ Statut du cumulus en temps réel  
+✅ 5 boutons de forçage (constant + 4 durées)  
+✅ Bouton d'arrêt d'urgence  
+✅ Aide intégrée  
+✅ Graphiques d'historique  
+✅ Statistiques du jour  
+✅ Actions avancées  
+✅ Design attrayant avec couleurs  
+
+**Pour HTModeLia, HA 2026.7+**
+
+---
+
+Version: 1.0.2  
+Date: 2024-07-14  
+Difficulté: Facile  

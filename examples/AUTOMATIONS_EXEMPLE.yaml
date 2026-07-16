@@ -1,0 +1,381 @@
+# ✨ AUTOMATIONS AVEC SERVICES - Solar Cumulus Optimizer
+# À copier dans automations.yaml ou créer via UI
+
+automations:
+
+  # ====== AUTOMATIONS SIMPLES ======
+
+  - alias: "Cumulus - Activation Solaire"
+    id: cumulus_activate_solar
+    trigger:
+      platform: time_pattern
+      minutes: 0  # Chaque heure
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.cumulus_puissance_solaire', 'native_value') | float(0) > 1000 }}"
+      - condition: template
+        value_template: "{{ now().hour >= 7 and now().hour <= 18 }}"
+    action:
+      - service: solar_cumulus_optimizer.activate_heating
+        data:
+          reason: "solar_auto"
+          notify: true
+
+  - alias: "Cumulus - Désactivation HC"
+    id: cumulus_deactivate_hc
+    trigger:
+      platform: time
+      at: "08:00:00"
+    action:
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+
+  - alias: "Cumulus - Réinitialiser Stats Quotidiennes"
+    id: cumulus_reset_daily
+    trigger:
+      platform: time
+      at: "00:00:00"
+    action:
+      - service: solar_cumulus_optimizer.reset_stats
+      - notify: telegram
+        data:
+          message: "📊 Cumulus: Stats réinitialisées pour le jour"
+
+  # ====== AUTOMATIONS AVANCÉES AVEC PLUSIEURS SERVICES ======
+
+  - alias: "Cumulus - Chauffage Intelligent HC Nuit"
+    id: cumulus_hc_night_smart
+    trigger:
+      - platform: time
+        at: "22:30:00"  # 22h30
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('weather.home', 'condition') in ['cloudy', 'rainy', 'snowy'] }}"
+    action:
+      # Action 1: Activer en mode HC nuit
+      - service: solar_cumulus_optimizer.activate_heating
+        data:
+          reason: "hc_night_bad_weather"
+          notify: true
+
+      # Action 2: Envoyer notification plus détaillée
+      - service: persistent_notification.create
+        data:
+          title: "🌙 Cumulus Solaire"
+          message: "Activation HC Nuit (mauvais temps prévu)"
+          notification_id: "cumulus_hc_night"
+
+      # Action 3: Logger l'événement
+      - service: logger.log
+        data:
+          level: INFO
+          message: "HC Night activation triggered (bad weather)"
+
+  - alias: "Cumulus - Protection Contre Surcharge"
+    id: cumulus_overload_protection
+    trigger:
+      platform: numeric_state
+      entity_id: sensor.cumulus_daily_hc_activations
+      above: 4
+    action:
+      # Action 1: Désactiver le cumulus
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+
+      # Action 2: Alerte importante
+      - service: persistent_notification.create
+        data:
+          title: "⚠️ ALERTE Cumulus"
+          message: "Protection: plus de 4 activations HC aujourd'hui!"
+          notification_id: "cumulus_overload"
+
+      # Action 3: Notifier le téléphone
+      - service: notify.mobile_app_iphone
+        data:
+          title: "⚠️ Cumulus Overload"
+          message: "HC activations: trop élevées aujourd'hui"
+
+      # Action 4: Log d'alerte
+      - service: logger.log
+        data:
+          level: WARNING
+          message: "Cumulus overload protection activated!"
+
+  - alias: "Cumulus - Activation Smart Mode"
+    id: cumulus_smart_activate
+    trigger:
+      - platform: template
+        value_template: "{{ (states('sensor.cumulus_puissance_solaire') | float(0)) > 2000 and (states('weather.home') == 'sunny') }}"
+    action:
+      # Service groupé: activation intelligente
+      - service: solar_cumulus_optimizer.smart_activate
+        data:
+          temperature: 60
+          enable_notifications: true
+          enable_lights: true
+
+      # Action supplémentaire: historique
+      - service: history_stats.reload
+        data: {}
+
+  # ====== AUTOMATIONS PROGRAMMÉES ======
+
+  - alias: "Cumulus - Cycle Matin Solaire"
+    id: cumulus_morning_solar
+    trigger:
+      platform: time
+      at: "06:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ now().weekday() < 5 }}"  # Lundi-Vendredi
+    action:
+      - service: solar_cumulus_optimizer.force_mode
+        data:
+          mode: "solar"
+      - delay:
+          hours: 2
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: false
+
+  - alias: "Cumulus - Cycle Nuit HC"
+    id: cumulus_night_hc
+    trigger:
+      platform: time
+      at: "23:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('weather.home', 'temperature') | float(20) < 5 }}"
+    action:
+      - service: solar_cumulus_optimizer.force_mode
+        data:
+          mode: "hc_night"
+      - delay:
+          hours: 3
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+
+  - alias: "Cumulus - Maintien Température Nuit Froide"
+    id: cumulus_cold_night_maintain
+    trigger:
+      platform: time_pattern
+      minutes: 30
+    condition:
+      - condition: template
+        value_template: "{{ (state_attr('weather.home', 'temperature') | float(20)) < 0 }}"
+      - condition: template
+        value_template: "{{ now().hour >= 22 or now().hour <= 6 }}"
+    action:
+      - service: solar_cumulus_optimizer.activate_heating
+        data:
+          reason: "cold_night_maintain"
+          notify: false
+
+  # ====== AUTOMATIONS RÉACTIVES ======
+
+  - alias: "Cumulus - Réaction Changement Tarif"
+    id: cumulus_tariff_change
+    trigger:
+      platform: state
+      entity_id: sensor.linky_ntraf
+      to: "2"  # HC
+    action:
+      - service: solar_cumulus_optimizer.activate_heating
+        data:
+          reason: "tariff_change_to_hc"
+          notify: true
+      - service: persistent_notification.create
+        data:
+          message: "Tarif changé en HC - Chauffage activé"
+
+  - alias: "Cumulus - Désactiver en Tarif Creux Expiré"
+    id: cumulus_tariff_expire
+    trigger:
+      platform: state
+      entity_id: sensor.linky_ntraf
+      to: "1"  # HP
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('switch.cumulus_solaire_controle', 'relay_active') }}"
+    action:
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+
+  - alias: "Cumulus - Détection Nuages Massifs"
+    id: cumulus_heavy_clouds
+    trigger:
+      platform: template
+      value_template: "{{ (states('sensor.cumulus_puissance_solaire') | float(0)) < 100 }}"
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('switch.cumulus_solaire_controle', 'relay_reason') == 'solar' }}"
+    action:
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+      - service: persistent_notification.create
+        data:
+          title: "☁️ Cumulus"
+          message: "Nuages détectés - Désactivation solaire"
+
+  # ====== AUTOMATIONS AVEC CONDITIONS COMPLEXES ======
+
+  - alias: "Cumulus - Optimisation Complète Journée"
+    id: cumulus_full_day_optimization
+    trigger:
+      platform: time_pattern
+      minutes: 15  # Toutes les 15 minutes
+    condition:
+      # Condition 1: Heure de travail
+      - condition: template
+        value_template: "{{ now().hour >= 6 and now().hour <= 22 }}"
+      # Condition 2: Jour ouvrable
+      - condition: template
+        value_template: "{{ now().weekday() < 5 }}"
+    action:
+      # Logique principale
+      - choose:
+          # Cas 1: Beaucoup de soleil
+          - conditions:
+              - condition: template
+                value_template: "{{ (states('sensor.cumulus_puissance_solaire') | float(0)) > 1500 }}"
+            sequence:
+              - service: solar_cumulus_optimizer.activate_heating
+                data:
+                  reason: "solar_high"
+                  notify: false
+
+          # Cas 2: Peu de soleil mais HC
+          - conditions:
+              - condition: template
+                value_template: "{{ (states('sensor.linky_ntraf') | int) >= 2 }}"
+            sequence:
+              - service: solar_cumulus_optimizer.activate_heating
+                data:
+                  reason: "hc_low_solar"
+                  notify: false
+
+          # Cas 3: Ni soleil ni HC favorable
+          - conditions:
+              - condition: template
+                value_template: "{{ (states('sensor.cumulus_puissance_solaire') | float(0)) < 500 }}"
+            sequence:
+              - service: solar_cumulus_optimizer.deactivate_heating
+                data:
+                  notify: false
+
+  # ====== AUTOMATIONS DE MAINTENANCE ======
+
+  - alias: "Cumulus - Rapport Stats Hebdomadaire"
+    id: cumulus_weekly_stats
+    trigger:
+      platform: time
+      at: "19:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ now().weekday() == 6 }}"  # Dimanche
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "📊 Rapport Cumulus Hebdo"
+          message: |
+            ☀️ Activations Solaires: {{ state_attr('sensor.cumulus_activations_solaire_jour', 'native_value') | int(0) }}
+            ⏱️ Temps Solaire: {{ state_attr('sensor.cumulus_temps_solaire_jour', 'native_value') | float(0) }}h
+            🌙 Activations HC: {{ state_attr('sensor.cumulus_activations_hc_jour', 'native_value') | int(0) }}
+            ⏱️ Temps HC: {{ state_attr('sensor.cumulus_temps_hc_jour', 'native_value') | float(0) }}h
+          notification_id: "cumulus_weekly"
+
+  - alias: "Cumulus - Alerte Capteur Défaillant"
+    id: cumulus_sensor_failure
+    trigger:
+      platform: template
+      value_template: "{{ states('sensor.cumulus_puissance_solaire') == 'unavailable' }}"
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "❌ Alerte Cumulus"
+          message: "Capteur puissance solaire indisponible!"
+      - service: logger.log
+        data:
+          level: ERROR
+          message: "Solar power sensor unavailable!"
+
+  - alias: "Cumulus - Test Hebdomadaire"
+    id: cumulus_weekly_test
+    trigger:
+      platform: time
+      at: "12:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ now().weekday() == 3 }}"  # Mercredi
+    action:
+      - service: solar_cumulus_optimizer.activate_heating
+        data:
+          reason: "weekly_test"
+          notify: true
+      - delay:
+          seconds: 30
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+
+# ====== SCRIPTS (Optionnel) ======
+
+script:
+  cumulus_emergency_stop:
+    alias: "Cumulus - Arrêt d'Urgence"
+    sequence:
+      - service: solar_cumulus_optimizer.deactivate_heating
+        data:
+          notify: true
+      - service: persistent_notification.create
+        data:
+          title: "🚨 ARRÊT D'URGENCE"
+          message: "Cumulus arrêté manuellement!"
+      - service: logger.log
+        data:
+          level: CRITICAL
+          message: "Emergency stop triggered!"
+
+  cumulus_full_reset:
+    alias: "Cumulus - Reset Complet"
+    sequence:
+      - service: solar_cumulus_optimizer.deactivate_heating
+      - service: solar_cumulus_optimizer.reset_stats
+      - service: persistent_notification.create
+        data:
+          title: "🔄 Cumulus Reset"
+          message: "Reset complet effectué"
+
+  cumulus_smart_heating:
+    alias: "Cumulus - Chauffage Intelligent"
+    variables:
+      current_temp: "{{ state_attr('weather.home', 'temperature') | float(20) }}"
+      solar_power: "{{ states('sensor.cumulus_puissance_solaire') | float(0) }}"
+    sequence:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ solar_power > 2000 }}"
+            sequence:
+              - service: solar_cumulus_optimizer.smart_activate
+                data:
+                  temperature: "{{ current_temp }}"
+                  enable_notifications: true
+                  enable_lights: true
+          - conditions:
+              - condition: template
+                value_template: "{{ solar_power > 1000 }}"
+            sequence:
+              - service: solar_cumulus_optimizer.activate_heating
+                data:
+                  reason: "solar_medium"
+                  notify: false
+        default:
+          - service: solar_cumulus_optimizer.deactivate_heating
+            data:
+              notify: false

@@ -10,7 +10,7 @@ Copier-coller les badges suivants au début de votre README.md
 [![GitHub Stars](https://img.shields.io/github/stars/HTModeLia/solar-cumulus-optimizer?style=flat-square)](https://github.com/HTModeLia/solar-cumulus-optimizer/stargazers)
 [![HACS Supported](https://img.shields.io/badge/HACS-Supported-32a852?style=flat-square)](https://hacs.xyz)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square)](https://www.python.org/)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue?style=flat-square)](https://www.home-assistant.io/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.7%2B-blue?style=flat-square)](https://www.home-assistant.io/)
 ```
 
 ## Badges de Workflows

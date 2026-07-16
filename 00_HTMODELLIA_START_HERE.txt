@@ -1,0 +1,414 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║              🎮 FORÇAGE MANUEL DU CUMULUS - POUR HTMODELLIA               ║
+║                                                                            ║
+║                      Home Assistant 2026.7+                               ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+✨ CE QUI EST NOUVEAU
+═══════════════════════════════════════════════════════════════════════════════
+
+Un nouveau service pour FORCER la marche du cumulus à la demande!
+
+AVANT:
+  ❌ Cumulus ne s'activait que selon les règles automatiques
+  ❌ Pas de contrôle manuel direct
+
+APRÈS:
+  ✅ Cliquer un bouton = cumulus marche
+  ✅ Choisir la durée (constant ou 2h)
+  ✅ Arrêt automatique après durée
+  ✅ Notifications à chaque action
+
+═══════════════════════════════════════════════════════════════════════════════
+📥 3 FICHIERS À TÉLÉCHARGER
+═══════════════════════════════════════════════════════════════════════════════
+
+⭐ REQUIS:
+
+1. INIT_WITH_MANUAL_FORCE.py  (10 KB)
+   → Le code du nouveau service
+   → À copier en __init__.py
+   → Dans: custom_components/solar_cumulus_optimizer/
+
+2. FORCE_MANUAL_GUIDE.md  (8 KB)
+   → Guide d'utilisation du service
+   → Tous les paramètres expliqués
+   → Exemples d'utilisation
+
+3. DASHBOARD_FORÇAGE_MANUEL.yaml  (8 KB)
+   → Dashboard Lovelace complet
+   → Boutons prêts à utiliser
+   → À copier dans votre dashboard
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 INSTALLATION (5 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════
+
+ÉTAPE 1: Remplacer le fichier __init__.py
+───────────────────────────────────────────
+
+1. Télécharger INIT_WITH_MANUAL_FORCE.py
+2. Renommer en __init__.py
+3. Copier dans:
+   ~/.homeassistant/custom_components/solar_cumulus_optimizer/
+4. Remplacer l'ancien __init__.py (faire backup!)
+
+COMMANDE RAPIDE:
+  cp INIT_WITH_MANUAL_FORCE.py ~/.homeassistant/custom_components/solar_cumulus_optimizer/__init__.py
+
+
+ÉTAPE 2: Redémarrer Home Assistant
+──────────────────────────────────
+
+1. Aller à: Paramètres → Système → Redémarrer
+2. Attendre 30 secondes après redémarrage
+
+
+ÉTAPE 3: Ajouter le Dashboard
+─────────────────────────────
+
+1. Aller à: Paramètres → Tableaux de Bord
+2. Créer un nouveau tableau OU éditer un existant
+3. Ajouter une "Carte vide"
+4. Cliquer sur "Mode code" (coin haut droit)
+5. Copier-coller le contenu de DASHBOARD_FORÇAGE_MANUEL.yaml
+6. Sauvegarder
+
+
+ÉTAPE 4: Vérifier que ça fonctionne
+────────────────────────────────────
+
+1. Aller au dashboard "Forçage Manuel"
+2. Cliquer sur "🔘 Marche Constante"
+3. Vérifier que:
+   ✓ Le switch s'active
+   ✓ Une notification apparaît
+   ✓ Pas d'erreur dans les logs
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 UTILISATION - 5 BOUTONS DISPONIBLES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. 🔘 Marche Constante
+   → Cumulus marche indéfiniment
+   → Arrêt manuel seulement
+   → Utilité: Vous avez peu d'eau chaude
+
+2. ⏱️ Marche 2h
+   → Cumulus marche 2 heures
+   → Arrêt automatique après 2h
+   → Utilité: Bain avant d'arriver
+
+3. 1️⃣ Marche 1h
+   → Cumulus marche 1 heure
+   → Arrêt automatique après 1h
+   → Utilité: Préparation le matin
+
+4. 3️⃣ Marche 30m
+   → Cumulus marche 30 minutes
+   → Arrêt automatique après 30m
+   → Utilité: Chauffage rapide
+
+5. 1️⃣5️⃣ Marche 15m
+   → Cumulus marche 15 minutes
+   → Arrêt automatique après 15m
+   → Utilité: Test rapide
+
+6. ❌ Arrêt Immédiat
+   → Éteint le cumulus tout de suite
+   → Pas d'attente
+   → Utilité: Arrêt d'urgence
+
+═══════════════════════════════════════════════════════════════════════════════
+💡 EXEMPLES D'UTILISATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Scénario 1: Vous rentrez tard, vous voulez de l'eau chaude
+──────────────────────────────────────────────────────────
+1. 14h: Cliquer sur "⏱️ Marche 2h"
+2. Cumulus marche de 14h à 16h
+3. Arrêt automatique à 16h
+4. Notification vous prévient du démarrage ET de l'arrêt
+
+Scénario 2: Vous vous levez, vous prenez une douche
+───────────────────────────────────────────────────
+1. 07h: Cliquer sur "⏱️ Marche 1h"
+2. Eau chaude prête quand vous le désirez
+3. Arrêt automatique après 1h
+4. Économies d'énergie respectées
+
+Scénario 3: Vous avez peu d'eau, urgence
+────────────────────────────────────────
+1. Cliquer sur "🔘 Marche Constante"
+2. Cumulus chauffe à pleine puissance
+3. Chauffage continu
+4. Quand OK: Cliquer "❌ Arrêt"
+
+Scénario 4: Test du système
+──────────────────────────
+1. Cliquer sur "1️⃣5️⃣ Marche 15m"
+2. Test rapide du relais
+3. Arrêt automatique après 15 min
+4. Vérifier que tout fonctionne
+
+═══════════════════════════════════════════════════════════════════════════════
+🔔 NOTIFICATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+Vous recevrez des notifications dans Home Assistant:
+
+QUAND VOUS ACTIVEZ (exemple):
+┌─────────────────────────────────────────┐
+│ 🎮 FORÇAGE MANUEL - Cumulus Solaire     │
+│                                         │
+│ Cumulus FORCÉ en marche pour:           │
+│ 2 HEURES                                │
+└─────────────────────────────────────────┘
+
+QUAND LE TIMER S'ÉCOULE (exemple):
+┌─────────────────────────────────────────┐
+│ ⏰ Cumulus Solaire                      │
+│                                         │
+│ Forçage manuel terminé                  │
+│ (2 HEURES)                              │
+└─────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+🎮 VIA DASHBOARD - LE PLUS FACILE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ouvrir le dashboard "Forçage Manuel"
+2. Voir 6 grands boutons colorés:
+   🟢 🔘 Constant
+   🔵 ⏱️ 2h
+   🟣 1️⃣ 1h
+   🟠 3️⃣ 30m
+   🔴 1️⃣5️⃣ 15m
+   🟤 ❌ Arrêt
+
+3. Cliquer sur le bouton désiré
+4. C'est tout!
+
+═══════════════════════════════════════════════════════════════════════════════
+🤖 VIA AUTOMATION - POUR LES PROGRAMMATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+Exemple: Force le cumulus à 10h du matin pendant 2h
+
+automation:
+  - alias: "Cumulus - Forçage 10h"
+    trigger:
+      platform: time
+      at: "10:00:00"
+    action:
+      - service: solar_cumulus_optimizer.force_manual_heating
+        data:
+          duration: "2h"
+          notify: true
+          auto_disable: true
+
+═══════════════════════════════════════════════════════════════════════════════
+📲 VIA APPEL SERVICE DIRECT
+═══════════════════════════════════════════════════════════════════════════════
+
+Pour les utilisateurs avancés:
+
+service: solar_cumulus_optimizer.force_manual_heating
+data:
+  duration: "2h"          # Changer par: constant, 1h, 30m, 15m
+  notify: true            # true = notification, false = pas de notification
+  auto_disable: true      # true = arrêt auto, false = pas d'arrêt
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST - AVANT DE COMMENCER
+═══════════════════════════════════════════════════════════════════════════════
+
+- [ ] INIT_WITH_MANUAL_FORCE.py téléchargé
+- [ ] Sauvegarde de l'ancien __init__.py faite
+- [ ] Nouveau __init__.py copié au bon endroit
+- [ ] Home Assistant redémarré
+- [ ] Service visible dans Développeur → Services
+- [ ] Dashboard créé avec le YAML
+- [ ] Boutons testés
+- [ ] Notifications reçues
+
+═══════════════════════════════════════════════════════════════════════════════
+🔍 VÉRIFIER QUE ÇA FONCTIONNE
+═══════════════════════════════════════════════════════════════════════════════
+
+ÉTAPE 1: Service visible?
+────────────────────────
+1. Aller à: Paramètres → Outils → Développeur → Services
+2. Chercher: "solar_cumulus_optimizer"
+3. Chercher: "force_manual_heating"
+4. Vous devriez le voir dans la liste!
+
+ÉTAPE 2: Tester le service
+──────────────────────────
+1. Sélectionner: solar_cumulus_optimizer.force_manual_heating
+2. Remplir les données:
+   duration: "15m"
+   notify: true
+   auto_disable: true
+3. Cliquer "Appeler le service"
+4. Vérifier que:
+   ✓ Le switch s'active
+   ✓ Une notification apparaît
+   ✓ 15 min plus tard = arrêt auto + notification
+
+ÉTAPE 3: Tester le dashboard
+────────────────────────────
+1. Aller au dashboard "Forçage Manuel"
+2. Cliquer sur un bouton (ex: "⏱️ 2h")
+3. Vérifier:
+   ✓ Cumulus s'active
+   ✓ Notification apparaît
+   ✓ Pas d'erreur
+
+═══════════════════════════════════════════════════════════════════════════════
+🆘 DÉPANNAGE
+═══════════════════════════════════════════════════════════════════════════════
+
+Problème: Service n'apparaît pas
+───────────────────────────────
+Solution:
+1. Redémarrer HA: Paramètres → Système → Redémarrer
+2. Attendre 30 secondes
+3. Rafraîchir page: F5
+4. Vérifier logs: Configuration → Outils → Logs
+5. Chercher: "solar_cumulus_optimizer"
+
+Problème: Bouton ne fonctionne pas
+──────────────────────────────────
+Solution:
+1. Vérifier que le service est visible (voir ci-dessus)
+2. Vérifier les logs pour erreurs
+3. Tester via Développeur → Services en direct
+4. Vérifier que coordinator existe bien
+
+Problème: Timer n'arrête pas le cumulus
+───────────────────────────────────────
+Solution:
+1. Vérifier auto_disable: true dans les données
+2. Vérifier les logs
+3. Arrêter manuellement avec "❌ Arrêt"
+4. Vérifier notification que durée s'est écoulée
+
+Problème: Notifications ne s'affichent pas
+──────────────────────────────────────────
+Solution:
+1. Vérifier notify: true dans les données
+2. Vérifier que persistent_notification est activé
+3. Vérifier les notifications à la main
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 PARAMETERS DÉTAILLÉS
+═══════════════════════════════════════════════════════════════════════════════
+
+duration (REQUIS):
+  - "constant" → Marche continue (arrêt manuel)
+  - "2h"       → 2 heures (arrêt auto)
+  - "1h"       → 1 heure (arrêt auto)
+  - "30m"      → 30 minutes (arrêt auto)
+  - "15m"      → 15 minutes (arrêt auto)
+
+notify (OPTIONNEL, défaut: true):
+  - true  → Envoyer notification
+  - false → Pas de notification
+
+auto_disable (OPTIONNEL, défaut: true):
+  - true  → Arrêt automatique après durée
+  - false → Pas d'arrêt automatique
+
+═══════════════════════════════════════════════════════════════════════════════
+⏱️ TEMPS TOTAL
+═══════════════════════════════════════════════════════════════════════════════
+
+Téléchargement:        2 min
+Installation:          2 min
+Redémarrage HA:        1 min
+Création dashboard:    2 min
+Tests:                 2 min
+──────────────────────────
+TOTAL:                 9 minutes
+
+═══════════════════════════════════════════════════════════════════════════════
+🎁 CE QUE VOUS GAGNEZ
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Contrôle manuel du cumulus quand vous le désirez
+✅ Marche constante pour urgence
+✅ Marche temporaire (2h, 1h, 30m, 15m)
+✅ Arrêt automatique après durée
+✅ Notifications à chaque action
+✅ Dashboard professionnel avec boutons
+✅ Aucune configuration supplémentaire
+✅ Compatible HA 2026.7+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 RÉSUMÉ POUR HTMODELLIA
+═══════════════════════════════════════════════════════════════════════════════
+
+Vous avez maintenant la possibilité de:
+
+1. FORCER le cumulus en marche constant
+   → Pour quand vous avez peu d'eau chaude
+   → Arrêt manuel quand OK
+
+2. FORCER le cumulus pour 2 heures
+   → Parfait pour bain avant d'arriver
+   → Arrêt automatique après 2h
+
+3. AUTRES DURÉES (1h, 30m, 15m)
+   → Pour différents besoins
+   → Arrêt automatique à la fin
+
+4. BOUTONS DANS LE DASHBOARD
+   → 1 clic = cumulus marche
+   → C'est tout ce qu'il faut!
+
+═══════════════════════════════════════════════════════════════════════════════
+📚 FICHIERS COMPLÉMENTAIRES
+═══════════════════════════════════════════════════════════════════════════════
+
+FORCE_MANUAL_GUIDE.md
+  → Guide complet du service
+  → Tous les détails
+  → Exemples avancés
+
+DASHBOARD_FORÇAGE_MANUEL.yaml
+  → Dashboard prêt à copier
+  → Boutons colorés
+  → Statistiques incluses
+
+SERVICES_GUIDE.md (optionnel)
+  → Guide général des services
+  → Pour comprendre les concepts
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 PRÊT À DÉMARRER!
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Téléchargez: INIT_WITH_MANUAL_FORCE.py
+2. Installez-le
+3. Créez le dashboard
+4. Testez les boutons
+5. Profitez! 🎉
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Questions? Consultez FORCE_MANUAL_GUIDE.md
+
+Bon courage, HTModeLia! 💪
+
+═══════════════════════════════════════════════════════════════════════════════
+Version: 1.0.2
+Date: 2024-07-14
+HA: 2026.7+
+Username: HTModeLia
+Difficulté: Facile
+Temps: 9 minutes
+═══════════════════════════════════════════════════════════════════════════════

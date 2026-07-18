@@ -56,31 +56,45 @@ class SolarCumulusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(entry, data_updates=updated_data)
 
         current_data = dict(entry.data)
+        name_default = current_data.get(CONF_NAME, entry.title or "Solar Cumulus Optimizer")
+        solar_default = current_data.get("solar_power_entity")
+        relay_default = current_data.get("cumulus_relay_entity")
+        weather_default = current_data.get("weather_entity")
+        ntraf_default = current_data.get("linky_ntraf_entity")
+        sinti_default = current_data.get("linky_sinti_entity")
+
         data_schema = vol.Schema({
-            vol.Required(
-                CONF_NAME,
-                default=current_data.get(CONF_NAME, entry.title or "Solar Cumulus Optimizer"),
-            ): str,
+            vol.Required(CONF_NAME, default=name_default): str,
             vol.Required(
                 "solar_power_entity",
-                default=current_data.get("solar_power_entity", ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+                default=solar_default,
+            ) if solar_default else vol.Required("solar_power_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor")
+            ),
             vol.Required(
                 "cumulus_relay_entity",
-                default=current_data.get("cumulus_relay_entity", ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="switch")),
+                default=relay_default,
+            ) if relay_default else vol.Required("cumulus_relay_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="switch")
+            ),
             vol.Required(
                 "weather_entity",
-                default=current_data.get("weather_entity", ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="weather")),
+                default=weather_default,
+            ) if weather_default else vol.Required("weather_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="weather")
+            ),
             vol.Required(
                 "linky_ntraf_entity",
-                default=current_data.get("linky_ntraf_entity", ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+                default=ntraf_default,
+            ) if ntraf_default else vol.Required("linky_ntraf_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor")
+            ),
             vol.Required(
                 "linky_sinti_entity",
-                default=current_data.get("linky_sinti_entity", ""),
-            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+                default=sinti_default,
+            ) if sinti_default else vol.Required("linky_sinti_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor")
+            ),
         })
 
         return self.async_show_form(step_id="reconfigure", data_schema=data_schema)

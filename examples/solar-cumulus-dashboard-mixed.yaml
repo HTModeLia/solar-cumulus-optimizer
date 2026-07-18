@@ -1,11 +1,13 @@
-title: Optimisation Cumulus Solaire
+# Si Home Assistant affiche "entity not found", remplacez les IDs ci-dessous
+# par les IDs exacts visibles dans Settings > Devices & Services > Entities.
+title: Optimisation Cumulus Solaire (Mixte)
 views:
   - title: Principal
     cards:
       - type: markdown
         content: |
           # 🌞 Cumulus Solaire
-          Tableau de bord principal
+          Version mixte : cartes natives + cartes custom si disponibles
 
       - type: entities
         title: État du Cumulus
@@ -18,6 +20,12 @@ views:
             name: Puissance solaire
           - entity: sensor.cumulus_cloud_detection
             name: État du ciel
+
+      - type: custom:mushroom-template-card
+        entity: sensor.cumulus_solar_power
+        primary: "{{ states('sensor.cumulus_solar_power') | int }}W"
+        secondary: Puissance Solaire
+        icon: mdi:solar-power-box
 
       - type: history-graph
         title: Puissance solaire (24h)
@@ -55,8 +63,6 @@ views:
             name: Statut
           - entity: sensor.cumulus_last_duration
             name: Dernière durée
-          - entity: sensor.cumulus_solar_power
-            name: Puissance solaire
 
       - type: horizontal-stack
         cards:

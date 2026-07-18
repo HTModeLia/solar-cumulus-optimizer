@@ -45,6 +45,46 @@ class SolarCumulusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
+    async def async_step_reconfigure(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> config_entries.FlowResult:
+        """Réconfiguration de l’intégration."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            updated_data = {**entry.data, **user_input}
+            return self.async_update_reload_and_abort(entry, data_updates=updated_data)
+
+        current_data = dict(entry.data)
+        data_schema = vol.Schema({
+            vol.Required(
+                CONF_NAME,
+                default=current_data.get(CONF_NAME, entry.title or "Solar Cumulus Optimizer"),
+            ): str,
+            vol.Required(
+                "solar_power_entity",
+                default=current_data.get("solar_power_entity", ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Required(
+                "cumulus_relay_entity",
+                default=current_data.get("cumulus_relay_entity", ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="switch")),
+            vol.Required(
+                "weather_entity",
+                default=current_data.get("weather_entity", ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="weather")),
+            vol.Required(
+                "linky_ntraf_entity",
+                default=current_data.get("linky_ntraf_entity", ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Required(
+                "linky_sinti_entity",
+                default=current_data.get("linky_sinti_entity", ""),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+        })
+
+        return self.async_show_form(step_id="reconfigure", data_schema=data_schema)
+
     @staticmethod
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,

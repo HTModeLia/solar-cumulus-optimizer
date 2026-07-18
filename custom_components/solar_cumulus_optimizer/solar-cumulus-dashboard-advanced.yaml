@@ -1,11 +1,11 @@
-title: Optimisation Cumulus Solaire
+title: Optimisation Cumulus Solaire (Avancé)
 views:
   - title: Principal
     cards:
       - type: markdown
         content: |
           # 🌞 Cumulus Solaire
-          Tableau de bord principal
+          Version avancée : cœur natif, cartes custom optionnelles
 
       - type: entities
         title: État du Cumulus
@@ -18,6 +18,13 @@ views:
             name: Puissance solaire
           - entity: sensor.cumulus_cloud_detection
             name: État du ciel
+
+      # Décommentez ce bloc si Mushroom Cards est installé
+      # - type: custom:mushroom-template-card
+      #   entity: sensor.cumulus_solar_power
+      #   primary: "{{ states('sensor.cumulus_solar_power') | int }}W"
+      #   secondary: Puissance Solaire
+      #   icon: mdi:solar-power-box
 
       - type: history-graph
         title: Puissance solaire (24h)
@@ -55,8 +62,21 @@ views:
             name: Statut
           - entity: sensor.cumulus_last_duration
             name: Dernière durée
-          - entity: sensor.cumulus_solar_power
-            name: Puissance solaire
+
+      # Décommentez ce bloc si Mushroom Cards est installé
+      # - type: custom:mushroom-template-card
+      #   entity: switch.cumulus_control
+      #   primary: >
+      #     {% if is_state('switch.cumulus_control', 'on') %}
+      #       CUMULUS EN MARCHE
+      #     {% else %}
+      #       CUMULUS ARRÊTÉ
+      #     {% endif %}
+      #   secondary: >
+      #     {{ states('sensor.cumulus_solar_power') }}W | {{ states('sensor.cumulus_status') }}
+      #   icon: mdi:water-boiler
+      #   tap_action:
+      #     action: toggle
 
       - type: horizontal-stack
         cards:

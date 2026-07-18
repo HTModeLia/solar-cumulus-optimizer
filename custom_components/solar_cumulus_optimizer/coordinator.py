@@ -120,9 +120,9 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
         """Détermine si le relais doit être activé."""
 
         # Mode solaire
-        if not is_night and solar_power > self.min_solar_power:
-            # Production solaire suffisante
-            if sinti > 100:  # On injecte de l'énergie
+        if not is_night and solar_power >= self.min_solar_power:
+            # Activation solaire si production suffisante, même sans injection forte
+            if solar_power > self.min_solar_power or sinti > 50:
                 return "solar"
 
         # Mode HC de nuit
@@ -133,6 +133,10 @@ class SolarCumulusCoordinator(DataUpdateCoordinator):
 
             # Vérifier prévisions météo
             if self._is_bad_weather_expected():
+                return "hc_night"
+
+            # Fallback simple pour les horaires HC si la production solaire n'est pas disponible
+            if solar_power < self.min_solar_power:
                 return "hc_night"
 
         return None

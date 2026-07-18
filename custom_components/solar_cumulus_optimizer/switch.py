@@ -53,7 +53,7 @@ class SolarCumulusControlSwitch(SwitchEntity):
             name=self.entry.title or "Solar Cumulus Optimizer",
             manufacturer="HTModeLia",
             model="Solar Cumulus Optimizer",
-            sw_version="0.0.11",
+            sw_version="0.0.12",
         )
 
     @property

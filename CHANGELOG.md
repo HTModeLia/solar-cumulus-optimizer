@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.12] - 2026-07-18
+
+### ✨ Fonctionnalités
+- 🧩 Dashboard natif, mixte et avancé disponibles pour Home Assistant 2026.7
+- 🔄 Réconfiguration de l’intégration sans erreur 500
+- ⚙️ Logiciel d’activation solaire/HC plus robuste
+
+### 🐛 Corrections
+- Correction de la logique d’activation solaire et HC
+- Amélioration du flow de configuration
+- Mise à jour des métadonnées de version
+
+---
+
 ## [1.0.0] - 2024-01-15
 
 ### ✨ Fonctionnalités

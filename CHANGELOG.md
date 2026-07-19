@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.14] - 2026-07-18
+
+### 🧩 HACS
+- ✅ Mise à jour de la préparation de version pour que l’icône HACS soit correctement prise en compte dans la publication
+- 🖼️ Vérification de la présence des fichiers d’icône racine pour l’affichage dans HACS
+
 ## [0.0.12] - 2026-07-18
 
 ### ✨ Fonctionnalités

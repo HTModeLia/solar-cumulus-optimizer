@@ -10,7 +10,8 @@ import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, CALLBACK_TYPE
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import issue_registry as ir
 import voluptuous as vol
 
 from .coordinator import SolarCumulusCoordinator
@@ -19,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "solar_cumulus_optimizer"
 PLATFORMS: Final = [Platform.SWITCH, Platform.SENSOR]
+RESTART_REQUIRED_ISSUE_ID: Final = "restart_required"
 
 # Services
 SERVICE_ACTIVATE_HEATING = "activate_heating"
@@ -63,10 +65,27 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+@callback
+def _async_create_restart_required_issue(hass: HomeAssistant) -> None:
+    """Créer une issue de réparation pour signaler un redémarrage requis."""
+    ir.async_create_issue(
+        hass,
+        domain=DOMAIN,
+        issue_id=RESTART_REQUIRED_ISSUE_ID,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="restart_required",
+        translation_placeholders={},
+        learn_more_url="https://github.com/HTModeLia/solar-cumulus-optimizer",
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configuration via config flow."""
     try:
         hass.data.setdefault(DOMAIN, {})
+
+        _async_create_restart_required_issue(hass)
 
         coordinator = SolarCumulusCoordinator(hass, entry)
         await coordinator.async_config_entry_first_refresh()

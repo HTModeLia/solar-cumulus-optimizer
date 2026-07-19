@@ -31,6 +31,12 @@
       }
     }
   },
+  "issues": {
+    "restart_required": {
+      "title": "Redémarrage requis",
+      "description": "Home Assistant doit être redémarré pour appliquer les dernières modifications de l'intégration Solar Cumulus Optimizer."
+    }
+  },
   "entity": {
     "switch": {
       "cumulus_control": {

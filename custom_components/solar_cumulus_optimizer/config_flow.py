@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 
 from . import DOMAIN
@@ -15,7 +14,6 @@ class SolarCumulusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow pour Solar Cumulus Optimizer."""
 
     VERSION = 1
-    RECONFIG_THRESHOLD = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
         self, user_input: Optional[Dict[str, Any]] = None

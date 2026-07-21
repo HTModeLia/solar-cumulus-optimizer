@@ -12,6 +12,18 @@
           "linky_ntraf_entity": "Linky NTRAF (1=HP, 2+=HC)",
           "linky_sinti_entity": "Linky SINTI (injection)"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Solar Cumulus Optimizer",
+        "description": "Vérifiez ou modifiez les entités utilisées par l'intégration.",
+        "data": {
+          "name": "Nom de la configuration",
+          "solar_power_entity": "Entité de puissance solaire (Watts)",
+          "cumulus_relay_entity": "Entité du relais cumulus",
+          "weather_entity": "Entité météo (pour prévisions)",
+          "linky_ntraf_entity": "Linky NTRAF (1=HP, 2+=HC)",
+          "linky_sinti_entity": "Linky SINTI (injection)"
+        }
       }
     },
     "options": {
